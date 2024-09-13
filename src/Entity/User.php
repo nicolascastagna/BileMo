@@ -33,7 +33,7 @@ class User
     private ?string $billingAddress = null;
 
     #[ORM\Column(nullable: true)]
-    private ?int $phoneNumber = null;
+    private ?string $phoneNumber = null;
 
     #[ORM\ManyToOne(inversedBy: 'user')]
     private ?Customer $customer = null;
@@ -115,12 +115,12 @@ class User
         return $this;
     }
 
-    public function getPhoneNumber(): ?int
+    public function getPhoneNumber(): ?string
     {
         return $this->phoneNumber;
     }
 
-    public function setPhoneNumber(?int $phoneNumber): static
+    public function setPhoneNumber(?string $phoneNumber): static
     {
         $this->phoneNumber = $phoneNumber;
 
