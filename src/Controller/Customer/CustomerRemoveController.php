@@ -40,7 +40,7 @@ class CustomerRemoveController extends AbstractController
         $user = $userRepository->findOneBy([
             'id' => $userId,
             'customer' => $customer
-        ]);;
+        ]);
 
         if (empty($user)) {
             return new JsonResponse(
