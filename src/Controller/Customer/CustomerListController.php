@@ -15,7 +15,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 #[Route('/api')]
 class CustomerListController extends AbstractController
 {
-    #[Route('/customer/{id<\d+>}/user', name: 'api_customer_user', methods: [Request::METHOD_GET])]
+    #[Route('/customer/{id<\d+>}/user', name: 'api_customer_users', methods: [Request::METHOD_GET])]
     public function list(int $id, CustomerRepository $customerRepository, SerializerInterface $serializer): JsonResponse
     {
         $customer = $customerRepository->find($id);
