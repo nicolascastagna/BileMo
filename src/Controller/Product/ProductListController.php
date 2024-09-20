@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api')]
 class ProductListController extends AbstractController
 {
     #[Route('/products', name: 'api_products', methods: [Request::METHOD_GET])]

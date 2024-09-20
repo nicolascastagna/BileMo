@@ -18,7 +18,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api')]
 class CustomerAddController extends AbstractController
 {
     #[Route('/customer/{id<\d+>}/user/new', name: 'api_customer_user_new', methods: [Request::METHOD_POST])]

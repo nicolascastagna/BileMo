@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api')]
 class CustomerRemoveController extends AbstractController
 {
     #[Route('/customer/{id<\d+>}/user/{userId<\d+>}', name: 'api_customer_user_remove', methods: [Request::METHOD_DELETE])]
