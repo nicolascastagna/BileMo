@@ -11,37 +11,53 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class CustomerListController extends AbstractController
 {
     #[Route('/customer/{id<\d+>}/user', name: 'api_customer_users', methods: [Request::METHOD_GET])]
-    public function list(int $id, CustomerRepository $customerRepository, SerializerInterface $serializer): JsonResponse
-    {
-        $customer = $customerRepository->find($id);
+    public function list(
+        int $id,
+        CustomerRepository $customerRepository,
+        SerializerInterface $serializer,
+        TagAwareCacheInterface $cache
+    ): JsonResponse {
+        $cacheKey = 'customer_users_' . $id;
+        $cacheTag = 'customer_data';
 
-        if (empty($customer)) {
-            return new JsonResponse(
-                ['status' =>
-                Response::HTTP_NOT_FOUND, 'message' =>
-                'Aucun client n\'a été trouvé.'],
-                Response::HTTP_NOT_FOUND
-            );
-        }
+        $response = $cache->get($cacheKey, function (ItemInterface $item) use ($id, $customerRepository, $serializer, $cacheTag) {
+            $item->expiresAfter(3600);
+            $item->tag($cacheTag);
 
-        $data = [
-            'id' => $customer->getId(),
-            'company' => $customer->getCompany(),
-            'siret' => $customer->getSiret(),
-            'email' => $customer->getEmail(),
-            'head_office' => $customer->getHeadOffice(),
-            'users' => $customer->getUser()
-        ];
+            $customer = $customerRepository->find($id);
 
-        $newData = $serializer->serialize($data, 'json', ['groups' => 'user']);
+            if (empty($customer)) {
+                return new JsonResponse(
+                    ['status' =>
+                    Response::HTTP_NOT_FOUND, 'message' =>
+                    'Aucun client n\'a été trouvé.'],
+                    Response::HTTP_NOT_FOUND
+                );
+            }
 
-        return new JsonResponse([
-            'status' => Response::HTTP_OK,
-            'data' => json_decode($newData)
-        ], Response::HTTP_OK);
+            $data = [
+                'id' => $customer->getId(),
+                'company' => $customer->getCompany(),
+                'siret' => $customer->getSiret(),
+                'email' => $customer->getEmail(),
+                'head_office' => $customer->getHeadOffice(),
+                'users' => $customer->getUser()
+            ];
+
+            $newData = $serializer->serialize($data, 'json', ['groups' => 'user']);
+
+            return new JsonResponse([
+                'status' => Response::HTTP_OK,
+                'data' => json_decode($newData)
+            ], Response::HTTP_OK);
+        });
+
+        return $response;
     }
 }
