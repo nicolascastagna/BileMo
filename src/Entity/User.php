@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
@@ -12,27 +13,34 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user'])]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user'])]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user'])]
     private ?string $email = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['user'])]
     private ?\DateTimeInterface $creationDate = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user'])]
     private ?string $billingAddress = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['user'])]
     private ?string $phoneNumber = null;
 
     #[ORM\ManyToOne(inversedBy: 'user')]
