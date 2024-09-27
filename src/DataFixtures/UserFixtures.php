@@ -16,7 +16,7 @@ class UserFixtures extends Fixture
         $customer1 = $this->getReference('customer_0');
         $customer2 = $this->getReference('customer_1');
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 30; $i++) {
             $user = new User();
             $user->setLastname($faker->lastName)
                 ->setFirstname($faker->firstName)
@@ -31,7 +31,7 @@ class UserFixtures extends Fixture
         }
 
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 30; $i++) {
             $user = new User();
             $user->setLastname($faker->lastName)
                 ->setFirstname($faker->firstName)

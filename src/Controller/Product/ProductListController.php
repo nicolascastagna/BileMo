@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Product;
 
-use App\Interfaces\ProductListServiceInterface;
+use App\Repository\ProductRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,22 +18,39 @@ class ProductListController extends AbstractController
     #[Route('/products', name: 'api_products', methods: [Request::METHOD_GET])]
     public function list(
         Request $request,
-        ProductListServiceInterface $productListService,
+        ProductRepository $productRepository,
         TagAwareCacheInterface $cache
     ): JsonResponse {
-        $cacheKey = 'product_list';
+        $cacheKey = 'product_list' . '_page_' . $request->query->getInt('page', 1);
         $cacheTag = 'product_data';
 
-        $response = $cache->get($cacheKey, function (ItemInterface $item) use ($request, $productListService, $cacheTag) {
+        $response = $cache->get($cacheKey, function (ItemInterface $item) use ($request, $productRepository, $cacheTag) {
             $item->expiresAfter(3600);
             $item->tag($cacheTag);
 
-            $result = $productListService->getPaginatedProducts($request);
+            $page = $request->query->getInt('page', 1);
+            $limit = $request->query->getInt('limit', 10);
+
+            $paginator = $productRepository->findPaginatedProducts($page, $limit);
+            $products = $paginator->getIterator();
+
+            $data = [];
+            foreach ($products as $product) {
+                $data[] = [
+                    'id' => $product->getId(),
+                    'name' => $product->getName(),
+                    'description' => $product->getDescription(),
+                    'creation_date' => $product->getCreationDate()->format('Y-m-d H:i:s'),
+                    'image' => $product->getImage(),
+                    'price' => $product->getPrice(),
+                    'brand' => $product->getBrand(),
+                    'reference' => $product->getReference(),
+                ];
+            }
 
             return new JsonResponse([
                 'status' => Response::HTTP_OK,
-                'data' => $result['data'],
-                'pagination' => $result['pagination']
+                'data' => $data,
             ], Response::HTTP_OK);
         });
 
