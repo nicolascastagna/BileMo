@@ -14,8 +14,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
-#[Route('/api')]
 class CustomerRemoveController extends AbstractController
 {
     #[Route('/customer/{id<\d+>}/user/{userId<\d+>}', name: 'api_customer_user_remove', methods: [Request::METHOD_DELETE])]
@@ -25,6 +25,7 @@ class CustomerRemoveController extends AbstractController
         CustomerRepository $customerRepository,
         UserRepository $userRepository,
         EntityManagerInterface $entityManager,
+        TagAwareCacheInterface $cache
     ): JsonResponse {
         $customer = $customerRepository->find($id);
 
@@ -56,6 +57,9 @@ class CustomerRemoveController extends AbstractController
         try {
             $entityManager->remove($user);
             $entityManager->flush();
+
+            $cacheTag = 'customer_data';
+            $cache->invalidateTags([$cacheTag]);
 
             return new JsonResponse(['status' => Response::HTTP_OK, 'message' => 'Utilisateur supprimé avec succès.'], Response::HTTP_OK);
         } catch (Exception $exception) {

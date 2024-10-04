@@ -17,8 +17,8 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
-#[Route('/api')]
 class CustomerAddController extends AbstractController
 {
     #[Route('/customer/{id<\d+>}/user/new', name: 'api_customer_user_new', methods: [Request::METHOD_POST])]
@@ -29,6 +29,7 @@ class CustomerAddController extends AbstractController
         UserRepository $userRepository,
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
+        TagAwareCacheInterface $cache
     ): JsonResponse {
         $customer = $customerRepository->find($id);
 
@@ -64,6 +65,9 @@ class CustomerAddController extends AbstractController
         try {
             $entityManager->persist($user);
             $entityManager->flush();
+
+            $cacheTag = 'customer_data';
+            $cache->invalidateTags([$cacheTag]);
         } catch (Exception $exception) {
             throw new HttpException(500, json_encode(['error' => $exception->getMessage()]), $exception);
         }
