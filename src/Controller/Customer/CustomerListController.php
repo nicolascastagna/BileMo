@@ -58,6 +58,7 @@ class CustomerListController extends AbstractController
             ], Response::HTTP_OK);
         });
 
+        $response->headers->set('Cache-Control', 'public, max-age=3600');
         return $response;
     }
 }
