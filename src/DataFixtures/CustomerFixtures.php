@@ -13,7 +13,7 @@ class CustomerFixtures extends Fixture
         $customer1 = new Customer();
         $customer1->setCompany('Bouygues Telecom')
             ->setSiret('12345678901234')
-            ->setPassword('12345678')
+            ->setPassword(password_hash('12345678', PASSWORD_DEFAULT))
             ->setEmail('bouygues@gmail.com')
             ->setHeadOffice('Paris');
 
@@ -22,7 +22,7 @@ class CustomerFixtures extends Fixture
         $customer2 = new Customer();
         $customer2->setCompany('Free')
             ->setSiret('12345678901234')
-            ->setPassword('12345678')
+            ->setPassword(password_hash('12345678', PASSWORD_DEFAULT))
             ->setEmail('free@gmail.com')
             ->setHeadOffice('Paris');
 
