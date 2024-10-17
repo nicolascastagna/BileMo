@@ -14,25 +14,21 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use OpenApi\Annotations\Attribute;
-use OpenApi\Attributes as OA;
+use OpenApi\Attributes as OpenAttribute;
 
 class ProductListController extends AbstractController
 {
-    #[OA\Get(
-        path: '/api/products',
-        summary: 'Get products list',
-        description: 'Returns a list of products',
-        tags: ['Products']
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'Successful operation',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: Product::class))
+    #[
+        OpenAttribute\Tag(name: 'Products'),
+        OpenAttribute\Response(
+            response: Response::HTTP_OK,
+            description: 'Returns all products',
+            content: new OpenAttribute\JsonContent(
+                type: 'array',
+                items: new OpenAttribute\Items(ref: new Model(type: Product::class))
+            ),
         )
-    )]
+    ]
     #[Route('/products', name: 'api_products', methods: [Request::METHOD_GET])]
     public function list(
         Request $request,

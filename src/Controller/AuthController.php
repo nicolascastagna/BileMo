@@ -5,46 +5,47 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Nelmio\ApiDocBundle\Annotation\Model;
-use OpenApi\Attributes as OA;
-use OpenApi\Annotations\Attribute;
+use OpenApi\Attributes as OpenAttribute;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends AbstractController
 {
-    #[OA\Post(
-        path: '/api/login',
-        summary: 'Login and obtain JWT token',
-        description: 'Logs in a user and returns a JWT token for authentication',
-        requestBody: new OA\RequestBody(
-            description: 'Login credentials',
-            required: true,
-            content: new OA\JsonContent(
+    #[
+        OpenAttribute\Tag(name: 'Auth'),
+        OpenAttribute\Response(
+            response: Response::HTTP_OK,
+            description: 'Login successful, JWT token returned',
+            content: new OpenAttribute\JsonContent(
                 type: 'object',
-                required: ['username', 'password'],
                 properties: [
-                    new OA\Property(property: 'username', type: 'string'),
-                    new OA\Property(property: 'password', type: 'string', format: 'password')
+                    new OpenAttribute\Property(property: 'token', type: 'string')
                 ]
             )
         ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Login successful, JWT token returned',
-                content: new OA\JsonContent(
-                    type: 'object',
-                    properties: [
-                        new OA\Property(property: 'token', type: 'string')
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Invalid credentials'
+        OpenAttribute\Response(
+            response: Response::HTTP_UNAUTHORIZED,
+            description: 'Invalid credentials',
+            content: new OpenAttribute\JsonContent(
+                type: 'object',
+                properties: [
+                    new OpenAttribute\Property(property: 'status', type: 'integer', example: 401),
+                    new OpenAttribute\Property(property: 'message', type: 'string', example: 'Invalid credentials')
+                ]
             )
-        ],
-        tags: ['Auth']
-    )]
+        ),
+        OpenAttribute\RequestBody(
+            description: 'Login credentials',
+            required: true,
+            content: new OpenAttribute\JsonContent(
+                type: 'object',
+                required: ['username', 'password'],
+                properties: [
+                    new OpenAttribute\Property(property: 'username', type: 'string'),
+                    new OpenAttribute\Property(property: 'password', type: 'string', format: 'password')
+                ]
+            )
+        )
+    ]
     #[Route('/login', name: 'fake_login', methods: [Request::METHOD_POST])]
     public function login(Request $request): void {}
 }
