@@ -10,9 +10,62 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use OpenApi\Attributes as OpenAttribute;
 
 class CustomerShowController extends AbstractController
 {
+    #[
+        OpenAttribute\Tag(name: 'Customers'),
+        OpenAttribute\Parameter(
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'ID of the customer',
+            schema: new OpenAttribute\Schema(type: 'integer', example: 1)
+        ),
+        OpenAttribute\Parameter(
+            name: 'userId',
+            in: 'path',
+            required: true,
+            description: 'ID of the user',
+            schema: new OpenAttribute\Schema(type: 'integer', example: 5)
+        ),
+        OpenAttribute\Response(
+            response: Response::HTTP_OK,
+            description: 'Returns information user linked to the customer',
+            content: new OpenAttribute\JsonContent(
+                type: 'object',
+                properties: [
+                    new OpenAttribute\Property(property: 'status', type: 'integer', example: 200),
+                    new OpenAttribute\Property(property: 'data', type: 'object', properties: [
+                        new OpenAttribute\Property(property: 'id', type: 'integer', example: 1),
+                        new OpenAttribute\Property(property: 'lastname', type: 'string', example: 'Dupont'),
+                        new OpenAttribute\Property(property: 'firstname', type: 'string', example: 'Jean'),
+                        new OpenAttribute\Property(property: 'email', type: 'string', example: 'jean.dupont@example.com'),
+                        new OpenAttribute\Property(property: 'creation_date', type: 'string', format: 'date-time', example: '2024-10-17 20:30:00'),
+                        new OpenAttribute\Property(property: 'billing_address', type: 'string', example: '5 rue de la République, 75001 Paris, France'),
+                        new OpenAttribute\Property(property: 'phone_number', type: 'string', example: '+33612345678')
+                    ])
+                ]
+            )
+        ),
+        OpenAttribute\Response(
+            response: Response::HTTP_NOT_FOUND,
+            description: <<<'EOD'
+                <ul>
+                    <li>When the customer is not found.</li>
+                    <li>When the user is not found.</li>
+                </ul>
+                EOD,
+            content: new OpenAttribute\JsonContent(
+                type: 'object',
+                properties: [
+                    new OpenAttribute\Property(property: 'status', type: 'integer', example: 404),
+                    new OpenAttribute\Property(property: 'message', type: 'string', example: 'Aucun client n\'a été trouvé.')
+                ]
+            )
+        )
+    ]
     #[Route('/customer/{id<\d+>}/user/{userId<\d+>}', name: 'api_customer_user', methods: [Request::METHOD_GET])]
     public function show(int $id, int $userId, CustomerRepository $customerRepository): JsonResponse
     {
