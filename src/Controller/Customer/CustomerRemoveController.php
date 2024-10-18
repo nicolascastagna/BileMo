@@ -15,9 +15,65 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use OpenApi\Attributes as OpenAttribute;
 
 class CustomerRemoveController extends AbstractController
 {
+    #[
+        OpenAttribute\Tag(name: 'Customers'),
+        OpenAttribute\Parameter(
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'ID of the customer',
+            schema: new OpenAttribute\Schema(type: 'integer', example: 1)
+        ),
+        OpenAttribute\Parameter(
+            name: 'userId',
+            in: 'path',
+            required: true,
+            description: 'ID of the user',
+            schema: new OpenAttribute\Schema(type: 'integer', example: 5)
+        ),
+        OpenAttribute\Response(
+            response: Response::HTTP_OK,
+            description: 'User successfully removed',
+            content: new OpenAttribute\JsonContent(
+                type: 'object',
+                properties: [
+                    new OpenAttribute\Property(property: 'status', type: 'integer', example: 200),
+                    new OpenAttribute\Property(property: 'message', type: 'string', example: 'Utilisateur supprimé avec succès.')
+                ]
+            )
+        ),
+        OpenAttribute\Response(
+            response: Response::HTTP_NOT_FOUND,
+            description: <<<'EOD'
+                <ul>
+                    <li>When the customer is not found.</li>
+                    <li>When the user is not found.</li>
+                </ul>
+                EOD,
+            content: new OpenAttribute\JsonContent(
+                type: 'object',
+                properties: [
+                    new OpenAttribute\Property(property: 'status', type: 'integer', example: 404),
+                    new OpenAttribute\Property(property: 'message', type: 'string', example: 'Aucun client n\'a été trouvé.')
+                ]
+            )
+        ),
+        OpenAttribute\Response(
+            response: Response::HTTP_INTERNAL_SERVER_ERROR,
+            description: 'Internal server error',
+            content: new OpenAttribute\JsonContent(
+                type: 'object',
+                properties: [
+                    new OpenAttribute\Property(property: 'status', type: 'integer', example: 500),
+                    new OpenAttribute\Property(property: 'error', type: 'string', example: 'Internal server error')
+                ]
+            )
+        )
+    ]
     #[Route('/customer/{id<\d+>}/user/{userId<\d+>}', name: 'api_customer_user_remove', methods: [Request::METHOD_DELETE])]
     public function remove(
         int $id,
