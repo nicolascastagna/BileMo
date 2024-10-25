@@ -114,9 +114,10 @@ class CustomerAddController extends AbstractController
 
         if (empty($customer)) {
             return new JsonResponse(
-                ['status' =>
-                Response::HTTP_NOT_FOUND, 'message' =>
-                'Aucun client n\'a été trouvé.'],
+                [
+                    'status' => Response::HTTP_NOT_FOUND,
+                    'message' => 'Aucun client n\'a été trouvé.'
+                ],
                 Response::HTTP_NOT_FOUND
             );
         }
@@ -148,7 +149,9 @@ class CustomerAddController extends AbstractController
             $cacheTag = 'customer_data';
             $cache->invalidateTags([$cacheTag]);
         } catch (Exception $exception) {
-            throw new HttpException(500, json_encode(['error' => $exception->getMessage()]), $exception);
+            throw new HttpException(500, json_encode([
+                'error' => $exception->getMessage()
+            ]), $exception);
         }
 
         $data = [

@@ -46,6 +46,6 @@ class AuthController extends AbstractController
             )
         )
     ]
-    #[Route('/login', name: 'fake_login', methods: [Request::METHOD_POST])]
+    #[Route('/login', name: 'login', methods: [Request::METHOD_POST])]
     public function login(Request $request): void {}
 }
