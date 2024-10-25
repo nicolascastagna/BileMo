@@ -24,7 +24,7 @@ class ProductRepository extends ServiceEntityRepository
      * @param  int $limit
      * @return Paginator
      */
-    public function findPaginatedProducts(int $page = 1, int $limit = 10): Paginator
+    public function findPaginatedProducts(int $page=1, int $limit=10): Paginator
     {
         $query = $this->createQueryBuilder('p')
             ->orderBy('p.name', 'ASC')

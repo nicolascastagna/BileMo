@@ -52,9 +52,11 @@ class ProductShowController extends AbstractController
 
         if (empty($product)) {
             return new JsonResponse(
-                ['status' =>
-                Response::HTTP_NOT_FOUND, 'message' =>
-                'Aucun produit n\'a été trouvé.'],
+                [
+                    'status' =>
+                    Response::HTTP_NOT_FOUND,
+                    'message' => 'Aucun produit n\'a été trouvé.'
+                ],
                 Response::HTTP_NOT_FOUND
             );
         }

@@ -85,9 +85,11 @@ class CustomerListController extends AbstractController
 
             if (empty($customer)) {
                 return new JsonResponse(
-                    ['status' =>
-                    Response::HTTP_NOT_FOUND, 'message' =>
-                    'Aucun client n\'a été trouvé.'],
+                    [
+                        'status' =>
+                        Response::HTTP_NOT_FOUND,
+                        'message' => 'Aucun client n\'a été trouvé.'
+                    ],
                     Response::HTTP_NOT_FOUND
                 );
             }

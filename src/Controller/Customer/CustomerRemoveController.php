@@ -87,9 +87,11 @@ class CustomerRemoveController extends AbstractController
 
         if (empty($customer)) {
             return new JsonResponse(
-                ['status' =>
-                Response::HTTP_NOT_FOUND, 'message' =>
-                'Aucun client n\'a été trouvé.'],
+                [
+                    'status' =>
+                    Response::HTTP_NOT_FOUND,
+                    'message' => 'Aucun client n\'a été trouvé.'
+                ],
                 Response::HTTP_NOT_FOUND
             );
         }
@@ -101,9 +103,10 @@ class CustomerRemoveController extends AbstractController
 
         if (empty($user)) {
             return new JsonResponse(
-                ['status' =>
-                Response::HTTP_NOT_FOUND, 'message' =>
-                'Aucun utilisateur n\'a été trouvé.'],
+                [
+                    'status' => Response::HTTP_NOT_FOUND,
+                    'message' => 'Aucun utilisateur n\'a été trouvé.'
+                ],
                 Response::HTTP_NOT_FOUND
             );
         }
@@ -117,7 +120,10 @@ class CustomerRemoveController extends AbstractController
             $cacheTag = 'customer_data';
             $cache->invalidateTags([$cacheTag]);
 
-            return new JsonResponse(['status' => Response::HTTP_OK, 'message' => 'Utilisateur supprimé avec succès.'], Response::HTTP_OK);
+            return new JsonResponse([
+                'status' => Response::HTTP_OK,
+                'message' => 'Utilisateur supprimé avec succès.'
+            ], Response::HTTP_OK);
         } catch (Exception $exception) {
             throw new HttpException(500, json_encode(['error' => $exception->getMessage()]), $exception);
         }
