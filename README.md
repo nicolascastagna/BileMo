@@ -20,9 +20,16 @@ https://github.com/nicolascastagna/BileMo.git
 composer install
 ```
 
-**3 - Renommer le fichier **.env.example** en **.env** et modifier les paramètres de connexion à la base de données ainsi que JWT_PASSPHRASE**
+**3 - Genérez les clés public/private nécessaires pour JWT :**
+```
+openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096
+openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout
 
-**4 - Créer la base de données :**   
+```
+
+**4 - Renommer le fichier **.env.example** en **.env** et modifier les paramètres de connexion à la base de données ainsi que JWT_PASSPHRASE**
+
+**5 - Créer la base de données :**   
     
     A. Effectuer les commandes suivantes :
         - php bin/console doctrine:database:create
@@ -31,14 +38,14 @@ composer install
         - php bin/console doctrine:fixtures:load
       
 
-**5 - Démarrer le serveur symfony :**   
+**6 - Démarrer le serveur symfony :**   
 
 Démarrez le serveur en exécutant la commande suivante :
 ```
 symfony server:start
 ```
 
-**6 - Informations de connexions utilisateurs par défaut après éxécution des fixtures**
+**7 - Informations de connexions utilisateurs par défaut après éxécution des fixtures**
 
 **Client 1 :**
 ```
@@ -56,7 +63,7 @@ symfony server:start
 }
 ```
 
-**7 - Une fois le serveur démarré, vous pouvez accéder à la documentation de l'API en suivant le lien suivant :**    
+**8 - Une fois le serveur démarré, vous pouvez accéder à la documentation de l'API en suivant le lien suivant :**    
 ```
 http://localhost:8000/api/doc/
 ```
