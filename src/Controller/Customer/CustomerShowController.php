@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Controller\Customer;
 
 use App\Repository\CustomerRepository;
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OpenAttribute;
+use Symfony\Bundle\SecurityBundle\Security as SecurityBundleSecurity;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class CustomerShowController extends AbstractController
 {
@@ -67,10 +72,28 @@ class CustomerShowController extends AbstractController
         )
     ]
     #[Route('/customer/{id<\d+>}/user/{userId<\d+>}', name: 'api_customer_user', methods: [Request::METHOD_GET])]
-    public function show(int $id, int $userId, CustomerRepository $customerRepository): JsonResponse
-    {
-        $customer = $customerRepository->find($id);
+    public function show(
+        int $id,
+        int $userId,
+        UserRepository $userRepository,
+        CustomerRepository $customerRepository,
+        SerializerInterface $serializer,
+        TagAwareCacheInterface $cache,
+        SecurityBundleSecurity $security
+    ): JsonResponse {
+        $currentCustomer = $security->getUser();
 
+        if ($currentCustomer && $currentCustomer->getId() !== $id) {
+            return new JsonResponse(
+                [
+                    'status' => Response::HTTP_FORBIDDEN,
+                    'message' => 'Vous n\'êtes pas autorisé à accéder à cette ressource.'
+                ],
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
+        $customer = $customerRepository->find($id);
         if (empty($customer)) {
             return new JsonResponse(
                 [
@@ -82,8 +105,10 @@ class CustomerShowController extends AbstractController
             );
         }
 
-        $user = $customer->getUser()->get($userId);
-
+        $user = $userRepository->findOneBy([
+            'id' => $userId,
+            'customer' => $customer
+        ]);
         if (empty($user)) {
             return new JsonResponse(
                 [
@@ -95,19 +120,22 @@ class CustomerShowController extends AbstractController
             );
         }
 
-        $data = [
-            'id' => $user->getId(),
-            'lastname' => $user->getLastname(),
-            'firstname' => $user->getFirstname(),
-            'email' => $user->getEmail(),
-            'creation_date' => $user->getCreationDate()->format('Y-m-d H:i:s'),
-            'billing_address' => $user->getBillingAddress(),
-            'phone_number' => $user->getPhoneNumber(),
-        ];
+        $cacheKey = 'customer_' . $id . '_user_' . $userId;
+        $cacheTag = 'customer_data';
 
-        return new JsonResponse([
-            'status' => Response::HTTP_OK,
-            'data' => $data
-        ], Response::HTTP_OK);
+        $response = $cache->get($cacheKey, function (ItemInterface $item) use ($user, $serializer, $cacheTag) {
+            $item->expiresAfter(3600);
+            $item->tag($cacheTag);
+
+            $jsonData = $serializer->serialize($user, 'json', ['groups' => ['user']]);
+
+            return new JsonResponse([
+                'status' => Response::HTTP_OK,
+                'data' => json_decode($jsonData, true),
+            ], Response::HTTP_OK);
+        });
+        $response->headers->set('Cache-Control', 'public, max-age=3600');
+
+        return $response;
     }
 }
