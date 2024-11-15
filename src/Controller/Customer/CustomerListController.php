@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Bundle\SecurityBundle\Security as SecurityBundleSecurity;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
@@ -72,27 +73,39 @@ class CustomerListController extends AbstractController
         CustomerRepository $customerRepository,
         UserRepository $userRepository,
         SerializerInterface $serializer,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
+        SecurityBundleSecurity $security
     ): JsonResponse {
+        $currentCustomer = $security->getUser();
+
+        if ($currentCustomer && $currentCustomer->getId() !== $id) {
+            return new JsonResponse(
+                [
+                    'status' => Response::HTTP_FORBIDDEN,
+                    'message' => 'Vous n\'êtes pas autorisé à accéder à cette ressource.'
+                ],
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
+        $customer = $customerRepository->find($id);
+        if (empty($customer)) {
+            return new JsonResponse(
+                [
+                    'status' =>
+                    Response::HTTP_NOT_FOUND,
+                    'message' => 'Aucun client n\'a été trouvé.'
+                ],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
         $cacheKey = 'customer_users_' . $id . '_page_' . $request->query->getInt('page', 1);
         $cacheTag = 'customer_data';
 
-        $response = $cache->get($cacheKey, function (ItemInterface $item) use ($id, $request, $customerRepository, $userRepository, $serializer, $cacheTag) {
+        $response = $cache->get($cacheKey, function (ItemInterface $item) use ($id, $request, $userRepository, $serializer, $cacheTag) {
             $item->expiresAfter(3600);
             $item->tag($cacheTag);
-
-            $customer = $customerRepository->find($id);
-
-            if (empty($customer)) {
-                return new JsonResponse(
-                    [
-                        'status' =>
-                        Response::HTTP_NOT_FOUND,
-                        'message' => 'Aucun client n\'a été trouvé.'
-                    ],
-                    Response::HTTP_NOT_FOUND
-                );
-            }
 
             $page = $request->query->getInt('page', 1);
             $limit = $request->query->getInt('limit', 10);
@@ -107,8 +120,8 @@ class CustomerListController extends AbstractController
                 'data' => json_decode($newData),
             ], Response::HTTP_OK);
         });
-
         $response->headers->set('Cache-Control', 'public, max-age=3600');
+
         return $response;
     }
 }

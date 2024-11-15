@@ -13,6 +13,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OpenAttribute;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class ProductShowController extends AbstractController
 {
@@ -46,8 +49,15 @@ class ProductShowController extends AbstractController
         )
     ]
     #[Route('/product/{id<\d+>}', name: 'api_product', methods: [Request::METHOD_GET])]
-    public function show(ProductRepository $productRepository, int $id): JsonResponse
-    {
+    public function show(
+        ProductRepository $productRepository,
+        int $id,
+        SerializerInterface $serializer,
+        TagAwareCacheInterface $cache
+    ): JsonResponse {
+        $cacheKey = 'product_' . $id;
+        $cacheTag = 'product_data';
+
         $product = $productRepository->find($id);
 
         if (empty($product)) {
@@ -61,20 +71,19 @@ class ProductShowController extends AbstractController
             );
         }
 
-        $data = [
-            'id' => $product->getId(),
-            'name' => $product->getName(),
-            'description' => $product->getDescription(),
-            'creation_date' => $product->getCreationDate()->format('Y-m-d H:i:s'),
-            'image' => $product->getImage(),
-            'price' => $product->getPrice(),
-            'brand' => $product->getBrand(),
-            'reference' => $product->getReference(),
-        ];
+        $response = $cache->get($cacheKey, function (ItemInterface $item) use ($product, $serializer, $cacheTag) {
+            $item->expiresAfter(3600);
+            $item->tag($cacheTag);
 
-        return new JsonResponse([
-            'status' => Response::HTTP_OK,
-            'data' => $data
-        ], Response::HTTP_OK);
+            $jsonData = $serializer->serialize($product, 'json', ['groups' => ['product']]);
+
+            return new JsonResponse([
+                'status' => Response::HTTP_OK,
+                'data' => json_decode($jsonData, true),
+            ], Response::HTTP_OK);
+        });
+        $response->headers->set('Cache-Control', 'public, max-age=3600');
+
+        return $response;
     }
 }

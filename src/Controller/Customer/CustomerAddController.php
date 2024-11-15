@@ -15,10 +15,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Bundle\SecurityBundle\Security as SecurityBundleSecurity;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use OpenApi\Attributes as OpenAttribute;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class CustomerAddController extends AbstractController
 {
@@ -108,8 +110,22 @@ class CustomerAddController extends AbstractController
         UserRepository $userRepository,
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
+        SerializerInterface $serializer,
+        SecurityBundleSecurity $security
     ): JsonResponse {
+        $currentCustomer = $security->getUser();
+
+        if ($currentCustomer && $currentCustomer->getId() !== $id) {
+            return new JsonResponse(
+                [
+                    'status' => Response::HTTP_FORBIDDEN,
+                    'message' => 'Vous n\'êtes pas autorisé à effectuer cette action.'
+                ],
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
         $customer = $customerRepository->find($id);
 
         if (empty($customer)) {
@@ -154,19 +170,11 @@ class CustomerAddController extends AbstractController
             ]), $exception);
         }
 
-        $data = [
-            'id' => $user->getId(),
-            'lastname' => $user->getLastname(),
-            'firstname' => $user->getFirstname(),
-            'email' => $user->getEmail(),
-            'creation_date' => $user->getCreationDate()->format('Y-m-d H:i:s'),
-            'billing_address' => $user->getBillingAddress(),
-            'phone_number' => $user->getPhoneNumber(),
-        ];
+        $jsonData = $serializer->serialize($user, 'json', ['groups' => ['user']]);
 
         return new JsonResponse([
             'status' => Response::HTTP_CREATED,
-            'data' => $data
+            'data' => json_decode($jsonData, true),
         ], Response::HTTP_CREATED);
     }
 }

@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bundle\SecurityBundle\Security as SecurityBundleSecurity;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use OpenApi\Attributes as OpenAttribute;
 
@@ -81,10 +82,22 @@ class CustomerRemoveController extends AbstractController
         CustomerRepository $customerRepository,
         UserRepository $userRepository,
         EntityManagerInterface $entityManager,
-        TagAwareCacheInterface $cache
+        TagAwareCacheInterface $cache,
+        SecurityBundleSecurity $security
     ): JsonResponse {
-        $customer = $customerRepository->find($id);
+        $currentCustomer = $security->getUser();
 
+        if ($currentCustomer && $currentCustomer->getId() !== $id) {
+            return new JsonResponse(
+                [
+                    'status' => Response::HTTP_FORBIDDEN,
+                    'message' => "Vous n'êtes pas autorisé à effectuer cette action."
+                ],
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
+        $customer = $customerRepository->find($id);
         if (empty($customer)) {
             return new JsonResponse(
                 [
@@ -100,7 +113,6 @@ class CustomerRemoveController extends AbstractController
             'id' => $userId,
             'customer' => $customer
         ]);
-
         if (empty($user)) {
             return new JsonResponse(
                 [
@@ -120,10 +132,7 @@ class CustomerRemoveController extends AbstractController
             $cacheTag = 'customer_data';
             $cache->invalidateTags([$cacheTag]);
 
-            return new JsonResponse([
-                'status' => Response::HTTP_OK,
-                'message' => 'Utilisateur supprimé avec succès.'
-            ], Response::HTTP_OK);
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         } catch (Exception $exception) {
             throw new HttpException(500, json_encode(['error' => $exception->getMessage()]), $exception);
         }
